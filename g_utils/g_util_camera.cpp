@@ -1,5 +1,40 @@
 #include "g_u_h.h"
 CameraInitInfo* camconf{};
+bool terminalFlag=false;
+CVI_S32 getImageData(VIDEO_FRAME_INFO_S *frameInfo,ImageData* imgd,int channel)
+{
+    printf("into getImageData\n");
+    CVI_S32 s32Ret = CVI_VPSS_GetChnFrame(0, channel, frameInfo, 2000);
+      if (s32Ret != CVI_SUCCESS) {
+        printf("CVI_VPSS_GetChnFrame chn0 failed with %#x\n", s32Ret);
+        return s32Ret;
+    }
+    int image_pix=frameInfo->stVFrame.u32Width * frameInfo->stVFrame.u32Height;
+    int image_size = image_pix*3;
+    printf("argp:%p %p %p %p \n",(void *)frameInfo->stVFrame.pu8VirAddr[0],(void *)frameInfo->stVFrame.pu8VirAddr[1],(void *)frameInfo->stVFrame.u64PhyAddr[0],(void *)frameInfo->stVFrame.u64PhyAddr[1]);
+    printf("into phy to vir\n");
+    // unsigned char* ptr=(unsigned char *)malloc(image_size);
+    unsigned char* ptr=(unsigned char *)calloc(image_size,1);
+    printf("into phy to vir 1\n");
+    
+for (int i = 0; i < 3; i++) {
+    frameInfo->stVFrame.pu8VirAddr[i] = (CVI_U8 *)CVI_SYS_Mmap(frameInfo -> stVFrame .u64PhyAddr[i], image_pix);
+    memcpy(&ptr[image_pix*i], (const CVI_VOID *)frameInfo->stVFrame.pu8VirAddr[i], frameInfo->stVFrame.u32Length[i]);
+}
+    printf("into phy to vir 2\n");
+    printf("arg:%d %d %p %p %d\n",image_pix,image_size,ptr,frameInfo->stVFrame.pu8VirAddr[0],frameInfo->stVFrame.u32Length[0]);
+    for (int i = 0; i < 3; i++)
+    {
+        CVI_SYS_Munmap(frameInfo->stVFrame.pu8VirAddr[i], frameInfo->stVFrame.u32Length[i]);
+    }
+    printf("into phy to vir 4\n%d %d %d\n",frameInfo->stVFrame.u32Length[0],frameInfo->stVFrame.u32Length[1],frameInfo->stVFrame.u32Length[2]);
+    
+    imgd->data=ptr;
+    imgd->channel=3;
+    imgd->width=frameInfo->stVFrame.u32Width;
+    imgd->height=frameInfo->stVFrame.u32Height;
+    return CVI_SUCCESS;
+}
 int openCamara(SAMPLE_TDL_MW_CONFIG_S *stMWConfig)
 {
     CVI_S32 s32Ret = SAMPLE_TDL_Get_VI_Config(&stMWConfig->stViConfig);
@@ -23,14 +58,16 @@ void setVPSS(SAMPLE_TDL_MW_CONFIG_S *stMWConfig, int count , uint u32w , uint u3
 #endif
     SAMPLE_TDL_VPSS_CONFIG_S *pstVpssConfig = &stMWConfig->stVPSSPoolConfig.astVpssConfig[0];
     pstVpssConfig->bBindVI = true;
-    VPSS_GRP_DEFAULT_HELPER2(&pstVpssConfig->stVpssGrpAttr, u32w,
-                             u32h, VI_PIXEL_FORMAT, 1);
+    // PIXEL_FORMAT_NV21
+    // PIXEL_FORMAT_RGB_888
+    VPSS_GRP_DEFAULT_HELPER2(&pstVpssConfig->stVpssGrpAttr, 1920,
+                             1080, PIXEL_FORMAT_NV21, 1);
     pstVpssConfig->u32ChnCount = count;
     pstVpssConfig->u32ChnBindVI = 0;
     for (int i = 0; i < count; i++)
     {
         VPSS_CHN_DEFAULT_HELPER(&pstVpssConfig->astVpssChnAttr[i], u32w,
-                                u32h, VI_PIXEL_FORMAT, true);
+                                u32h, PIXEL_FORMAT_NV21, true);
     }
     SAMPLE_TDL_Get_Input_Config(&stMWConfig->stVencConfig.stChnInputCfg);
     stMWConfig->stVencConfig.u32FrameWidth = u32w;
@@ -42,7 +79,7 @@ void defaultConfig(SAMPLE_TDL_MW_CONFIG_S *stMWConfig, int count , uint u32w , u
     for (int i = 0; i < count; i++)
     {
         // VBPool 0 for VPSS Grp0 Chn0
-        stMWConfig->stVBPoolConfig.astVBPoolSetup[i].enFormat = VI_PIXEL_FORMAT;
+        stMWConfig->stVBPoolConfig.astVBPoolSetup[i].enFormat = PIXEL_FORMAT_NV21;
         stMWConfig->stVBPoolConfig.astVBPoolSetup[i].u32BlkCount = 2;
         stMWConfig->stVBPoolConfig.astVBPoolSetup[i].u32Height = u32h;
         stMWConfig->stVBPoolConfig.astVBPoolSetup[i].u32Width = u32w;
@@ -62,13 +99,16 @@ SAMPLE_TDL_MW_CONTEXT *initContext(SAMPLE_TDL_MW_CONFIG_S *stMWConfig)
     }
     return stMWContext;
 }
-CameraInitInfo *autoStartCamera(int count , int width , int height )
+CameraInitInfo *autoStartCamera( int width , int height , int count )
 {
+    printf("user config w=%d,h=%d",width,height);
     SAMPLE_TDL_MW_CONFIG_S *stMWConfig = (SAMPLE_TDL_MW_CONFIG_S *)calloc(1, sizeof(SAMPLE_TDL_MW_CONFIG_S));
     openCamara(stMWConfig);
     defaultConfig(stMWConfig, count, width, height);
     setVPSS(stMWConfig, count, width, height);
+    printf("cam4\n");
     SAMPLE_TDL_MW_CONTEXT *stmc = initContext(stMWConfig);
+    printf("cam5\n");
     CameraInitInfo *res = (CameraInitInfo *)calloc(1, sizeof(CameraInitInfo));
     res->pstMWContext = stmc;
     res->stMWConfig = stMWConfig;
@@ -82,6 +122,7 @@ void terminalService(CVI_S32 signo)
     printf("handle signal, signo: %d\n", signo);
     if (SIGINT == signo || SIGTERM == signo)
     {
+        terminalFlag=true;
         SAMPLE_TDL_Destroy_MW(camconf->pstMWContext);
     }
 }
