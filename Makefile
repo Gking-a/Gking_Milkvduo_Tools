@@ -215,7 +215,7 @@ SAMPLE_OPENCV_LIB = -L$(OPENCV_LIB_PATH) $(OPENCV_LIBS)
 SAMPLE_INIT_LIBS = $(SAMPLW_MW_LIB) $(SAMPLE_BASE_LIBS)
 SAMPLE_AUD_LIBS = $(SAMPLW_MW_LIB) $(SAMPLE_BASE_LIBS)  $(MW_AUDIO_LIBS)
 SAMPLE_YOLO_LIBS = $(SAMPLW_MW_LIB) $(SAMPLE_BASE_LIBS)  $(SAMPLE_OPENCV_LIB)
-SAMPLE_VI_LIBS = $(SAMPLW_MW_LIB) $(SAMPLE_OPENCV_LIB) $(SAMPLE_BASE_LIBS) -L$(RTSP_LIB_PATH) $(RTSP_LIBS) -L/home/gking/桌面/duo-examples/libs/system/musl_riscv64 -lwiringx
+SAMPLE_VI_LIBS = $(SAMPLW_MW_LIB) $(SAMPLE_OPENCV_LIB) $(SAMPLE_BASE_LIBS) -L$(RTSP_LIB_PATH) $(RTSP_LIBS) -L/home/gking/桌面/duo-examples/libs/system/musl_riscv64 -lwiringx -L/home/gking/桌面/cvitek-tdl-sdk-cv180x/sample/3rd/opencv/lib/opencv/libopencv_core.so -L/home/gking/桌面/cvitek-tdl-sdk-cv180x/sample/3rd/opencv/lib/opencv/libopencv_imgproc.so -L/home/gking/桌面/cvitek-tdl-sdk-cv180x/sample/3rd/opencv/lib/opencv/libopencv_imgcodecs.so
 SAMPLE_APP_LIBS = $(SAMPLW_MW_LIB) $(SAMPLE_OPENCV_LIB) $(SAMPLE_BASE_LIBS) -L$(RTSP_LIB_PATH) $(RTSP_LIBS) $(SDK_APP_LIBS)
 
 CFLAGS += -I$(SDK_INC_PATH) \
@@ -236,8 +236,10 @@ CFLAGS += -I$(SDK_INC_PATH) \
 		  -I$(MW_INC_PATH)/linux \
           -I$(AISDK_ROOT_PATH)/include/stb \
 		  -std=c++14 \
+		  -Wno-error=class-memaccess \
 		  -I$(PWD) \
-		  -I/home/gking/桌面/duo-examples/include/system
+		  -I/home/gking/桌面/duo-examples/include/system \
+		  -I/home/gking/桌面/cvitek-tdl-sdk-cv180x/sample/3rd/opencv/include/opencv2
 
 ifeq ($(CONFIRM_ENV_VAR), 1)
 $(info ---------------------------------------)
