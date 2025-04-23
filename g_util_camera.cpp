@@ -1,9 +1,18 @@
+/**
+ * Copyright © 2025-2025 Gking,All Rights Reserved.
+ * https://github.com/Gking-a/Gking_Milkvduo_Tools
+ * Mozilla Public License Version 2.0
+ */
 #include "g_u_h.h"
 CameraInitInfo* camconf{};
 bool terminalFlag=false;
+ImageData getImageData(VIDEO_FRAME_INFO_S *frameInfo, int channel = 0){
+    ImageData idata{};
+    getImageData(frameInfo,&idata,channel);
+    return idata;
+}
 CVI_S32 getImageData(VIDEO_FRAME_INFO_S *frameInfo,ImageData* imgd,int channel)
 {
-    printf("into getImageData\n");
     CVI_S32 s32Ret = CVI_VPSS_GetChnFrame(0, channel, frameInfo, 2000);
     if (s32Ret != CVI_SUCCESS)
     {
@@ -12,8 +21,6 @@ CVI_S32 getImageData(VIDEO_FRAME_INFO_S *frameInfo,ImageData* imgd,int channel)
     }
     int image_pix = frameInfo->stVFrame.u32Width * frameInfo->stVFrame.u32Height;
     int image_size = image_pix * 3;
-    printf("argp:%p %p %p %p \n", (void *)frameInfo->stVFrame.pu8VirAddr[0], (void *)frameInfo->stVFrame.pu8VirAddr[1], (void *)frameInfo->stVFrame.u64PhyAddr[0], (void *)frameInfo->stVFrame.u64PhyAddr[1]);
-    printf("into phy to vir 1\n");
     int datasize = 0;
     for (int i = 0; i < 3; i++)
     {
@@ -23,8 +30,6 @@ CVI_S32 getImageData(VIDEO_FRAME_INFO_S *frameInfo,ImageData* imgd,int channel)
         frameInfo->stVFrame.pu8VirAddr[i] = (CVI_U8 *)CVI_SYS_Mmap(frameInfo->stVFrame.u64PhyAddr[i], image_pix);
     }
     unsigned char *ptr = (unsigned char *)calloc(image_size / 2, 1);
-    printf("into phy to vir 2\n");
-    printf("arg:%d %d %p %p %d\n", image_pix, image_size, ptr, frameInfo->stVFrame.pu8VirAddr[0], frameInfo->stVFrame.u32Length[0]);
     for (int i = 0; i < 3; i++)
     {
         if (frameInfo->stVFrame.u32Length[i] == 0)
@@ -32,8 +37,6 @@ CVI_S32 getImageData(VIDEO_FRAME_INFO_S *frameInfo,ImageData* imgd,int channel)
         memcpy(&ptr[image_pix * i], (const CVI_VOID *)frameInfo->stVFrame.pu8VirAddr[i], frameInfo->stVFrame.u32Length[i]);
         CVI_SYS_Munmap(frameInfo->stVFrame.pu8VirAddr[i], frameInfo->stVFrame.u32Length[i]);
     }
-    printf("into phy to vir 4\n%d %d %d\n", frameInfo->stVFrame.u32Length[0], frameInfo->stVFrame.u32Length[1], frameInfo->stVFrame.u32Length[2]);
-
     imgd->data=ptr;
     imgd->channel=2;
     imgd->width=frameInfo->stVFrame.u32Width;
@@ -112,23 +115,27 @@ CameraInitInfo *autoStartCamera( int width , int height , int count )
     openCamara(stMWConfig);
     defaultConfig(stMWConfig, count, width, height);
     setVPSS(stMWConfig, count, width, height);
-    printf("cam4\n");
     SAMPLE_TDL_MW_CONTEXT *stmc = initContext(stMWConfig);
-    printf("cam5\n");
     CameraInitInfo *res = (CameraInitInfo *)calloc(1, sizeof(CameraInitInfo));
     res->pstMWContext = stmc;
     res->stMWConfig = stMWConfig;
     camconf = res;
     return res;
 }
-void terminalService(CVI_S32 signo)
+
+void terminalFlagfunc(int signo)
 {
     signal(SIGINT, SIG_IGN);
     signal(SIGTERM, SIG_IGN);
+    printf("handle signal flag, signo: %d\n", signo);
+    terminalFlag=true;
+    int led=25;
+    pinMode(led,PINMODE_OUTPUT);
+    wiringOpr(led,0);
+}
+void terminalService(CVI_S32 signo)
+{
     printf("handle signal, signo: %d\n", signo);
-    if (SIGINT == signo || SIGTERM == signo)
-    {
-        terminalFlag=true;
-        SAMPLE_TDL_Destroy_MW(camconf->pstMWContext);
-    }
+    terminalFlag=true;
+    SAMPLE_TDL_Destroy_MW(camconf->pstMWContext);
 }

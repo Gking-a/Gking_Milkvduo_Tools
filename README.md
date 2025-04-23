@@ -7,6 +7,7 @@ It is not my fault if you do not know the makefile and gcc compile command.
 I have provide my Makefile.It's all of my kindness,it is not my responsiblity.
 If you have problem using it,baidu/google makefile & gcc.
 ## Usage
+For the rtsp,refer to sample_vi_fd.  
 Noticed that if you want a custom size of image.Modify the "middleware_utils",the fucking file.The fucking function SAMPLE_TDL_Get_PIC_Size.  
 Make sure that you've linked dependencies (.o) of the two implement file.
 I don't think I will provide .so one day.
