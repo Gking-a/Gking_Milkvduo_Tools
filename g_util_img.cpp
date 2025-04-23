@@ -7,7 +7,7 @@
 
 ImageDetector::ImageDetector(){};
 ImageDetector::~ImageDetector(){};
-ImageDetectInfo* BinaryMiddleDetector::detect(Mat &img) {
+ImageDetectInfo* detectBinaryMiddle(Mat &img) {
     Mat binary;
     threshold(img, binary, 55, 255, THRESH_BINARY);
 
@@ -115,16 +115,15 @@ ImageDetectInfo* BinaryMiddleDetector::detect(Mat &img) {
     return result;
 }
 //roi::Absolute 
-ImageDetectInfo* detectFollow(cv::Mat& nv21, cv::Scalar hsv_lower, cv::Scalar hsv_upper,cv::Rect roi) {
+ImageDetectInfo* detectFollow(cv::Mat& img, cv::Scalar hsv_lower, cv::Scalar hsv_upper, cv::Rect roi,int type) {
     ImageDetectInfo* result = new ImageDetectInfo();
-    const int width = nv21.cols;
-    const int y_height = nv21.rows * 2 / 3;
-    // 提取UV平面（NV21格式）
-    cv::Mat uv_plane(nv21.rows - y_height, width, CV_8UC1, nv21.data + y_height * width);
     Mat hsv;
-    cv::cvtColor(nv21,hsv,COLOR_YUV2BGR_NV21);
+    if(type==0){
+        cv::cvtColor(img, hsv, COLOR_YUV2BGR_NV21);
+    }else{
+        hsv=img;
+    }
     cv::cvtColor(hsv, hsv, COLOR_BGR2HSV);
-    cv::Mat uv_mat;
     hsv=hsv(roi);
     // 颜色阈值处理
     cv::Mat mask;
@@ -132,30 +131,22 @@ ImageDetectInfo* detectFollow(cv::Mat& nv21, cv::Scalar hsv_lower, cv::Scalar hs
         hsv_lower,      // 阈值下限 (H,S,V)
         hsv_upper,      // 阈值上限 (H,S,V)
         mask);          // 输出二值掩码
-
     // 形态学优化
-    cv::morphologyEx(mask, mask, cv::MORPH_CLOSE, cv::getStructuringElement(cv::MORPH_RECT, {3,3}));
-
-    // 寻找最大轮廓
+    cv::morphologyEx(mask, mask, cv::MORPH_CLOSE, cv::getStructuringElement(cv::MORPH_RECT, { 3,3 }));
     std::vector<std::vector<cv::Point>> contours;
     cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-
     if (!contours.empty()) {
-        // 获取最大轮廓
         auto max_contour = *std::max_element(contours.begin(), contours.end(),
             [](const auto& a, const auto& b) { return cv::contourArea(a) < cv::contourArea(b); });
-
-        // 计算质心（基于UV平面坐标）
         cv::Moments m = cv::moments(max_contour);
-        if (m.m00 > 10) { // 面积阈值过滤噪声
-            cv::Point2f centroid(m.m10/m.m00, m.m01/m.m00);
-            
-            // 坐标转换到原始分辨率（UV平面为1/2分辨率）
-            const int img_center_x = width / 2;
-            const int img_center_y = y_height / 2;
-            
-            result->referoffsetx = static_cast<int>(centroid.x * 2 - img_center_x);
-            result->referoffsety = static_cast<int>(centroid.y * 2 - img_center_y); // 上到下为负
+        if (m.m00 == 0) {
+            result->detected = false;
+            result->referoffsetx = 0;
+            result->referoffsety = 0;
+        }
+        else {
+            result->referoffsetx = static_cast<int>(m.m10 / m.m00-hsv.cols/2);
+            result->referoffsety = static_cast<int>(-m.m01 / m.m00+hsv.rows/2);
             result->detected = true;
         }
     }

@@ -9,10 +9,11 @@ If you have problem using it,baidu/google makefile & gcc.
 ## Usage
 For the rtsp,refer to sample_vi_fd.  
 Noticed that if you want a custom size of image.Modify the "middleware_utils",the fucking file.The fucking function SAMPLE_TDL_Get_PIC_Size.  
-Make sure that you've linked dependencies (.o) of the two implement file.
-I don't think I will provide .so one day.
-The provided .o maybe not the newest.Compile yourself.
+Make sure that you've linked dependencies (.o) of the two implement file.  
+I don't think I will provide .so one day.  
+The provided .o maybe not the newest.Compile yourself.  
 Opencv is not hard to use.Learn it by yourself.Still,I would add some opencv functions..hopefully.  
 The L298N Support with pwm has been finished.I would not write an abstract class just for other drivers that i won't use.  
 Any questions?vivo 50,i will help you.No money,no gain.  
 Notice the MPL2.0 license!!  
+## Most Importantly,Accrording to the Close Source Sprite,everyone use any part of this repo should V me 50.QQ:2665241312

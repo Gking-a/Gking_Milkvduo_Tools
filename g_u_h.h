@@ -94,11 +94,8 @@ extern "C"
             virtual ~ImageDetector();
             virtual ImageDetectInfo* detect(Mat &img)=0;
     };
-    class BinaryMiddleDetector:public ImageDetector{
-        public:
-            ImageDetectInfo *detect(Mat &img) override;
-    };
-    ImageDetectInfo *detectFollow(cv::Mat &nv21, cv::Scalar uv_lower, cv::Scalar uv_upper,Rect roi);
+    ImageDetectInfo *detectBinaryMiddle(Mat &img);
+    ImageDetectInfo *detectFollow(cv::Mat &bgr, cv::Scalar uv_lower, cv::Scalar uv_upper,Rect roi,int type=0);
 #ifdef __cplusplus
 }
 #endif
