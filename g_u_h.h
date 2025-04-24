@@ -87,15 +87,12 @@ extern "C"
         int referoffsetx=0;
         bool detected=false;
     }ImageDetectInfo;
-    class ImageDetector
-    {
-        public:
-            ImageDetector();
-            virtual ~ImageDetector();
-            virtual ImageDetectInfo* detect(Mat &img)=0;
+    ImageDetectInfo *detectBinaryMiddle(Mat &img,void**);
+    struct detectFollowStruct{
+        cv::Scalar lower;
+        cv::Scalar upper;
     };
-    ImageDetectInfo *detectBinaryMiddle(Mat &img);
-    ImageDetectInfo *detectFollow(cv::Mat &bgr, cv::Scalar uv_lower, cv::Scalar uv_upper,Rect roi,int type=0);
+    ImageDetectInfo *detectFollow(cv::Mat &bgr,void **);
 #ifdef __cplusplus
 }
 #endif

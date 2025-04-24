@@ -7,7 +7,7 @@
 
 ImageDetector::ImageDetector(){};
 ImageDetector::~ImageDetector(){};
-ImageDetectInfo* detectBinaryMiddle(Mat &img) {
+ImageDetectInfo* detectBinaryMiddle(Mat &img,void**) {
     Mat binary;
     threshold(img, binary, 55, 255, THRESH_BINARY);
 
@@ -114,22 +114,17 @@ ImageDetectInfo* detectBinaryMiddle(Mat &img) {
 
     return result;
 }
-//roi::Absolute 
-ImageDetectInfo* detectFollow(cv::Mat& img, cv::Scalar hsv_lower, cv::Scalar hsv_upper, cv::Rect roi,int type) {
+/**
+ * @param img HSV
+ */
+ImageDetectInfo* detectFollow(cv::Mat& hsv, void ** a) {
+    detectFollowStruct* arg=(detectFollowStruct*)*a;
     ImageDetectInfo* result = new ImageDetectInfo();
-    Mat hsv;
-    if(type==0){
-        cv::cvtColor(img, hsv, COLOR_YUV2BGR_NV21);
-    }else{
-        hsv=img;
-    }
-    cv::cvtColor(hsv, hsv, COLOR_BGR2HSV);
-    hsv=hsv(roi);
     // 颜色阈值处理
     cv::Mat mask;
     cv::inRange(hsv,            // 输入hsv图像
-        hsv_lower,      // 阈值下限 (H,S,V)
-        hsv_upper,      // 阈值上限 (H,S,V)
+        arg->lower,      // 阈值下限 (H,S,V)
+        arg->upper,      // 阈值上限 (H,S,V)
         mask);          // 输出二值掩码
     // 形态学优化
     cv::morphologyEx(mask, mask, cv::MORPH_CLOSE, cv::getStructuringElement(cv::MORPH_RECT, { 3,3 }));
