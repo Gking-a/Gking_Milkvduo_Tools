@@ -1,9 +1,9 @@
 # Gking_Milkvduo_Tools
 <a href="https://github.com/Gking-a/Gking_Milkvduo_Tools/edit/master/LICENSE"><img alt="License"
     src="https://img.shields.io/badge/Code_License-MPL-f5de53?&color=f5de53"/></a>
-## Accrording to the Close Source Sprite,everyone use any part of this repo should V me 50.QQ:2665241312
+## Accrording to the Close Source Spirite,everyone use any part of this repo should V me 50.QQ:2665241312
 ## Announcement  
-It is not my fault if you do not know the makefile and gcc compile command.  
+It is not my fault if you do not know how the makefile and gcc compile commands work.  
 I have provide my Makefile.It's all of my kindness,it is not my responsiblity.
 If you have problem using it,baidu/google makefile & gcc.
 ## Usage
@@ -16,4 +16,4 @@ Opencv is not hard to use.Learn it by yourself.Still,I would add some opencv fun
 The L298N Support with pwm has been finished.I would not write an abstract class just for other drivers that i won't use.  
 Any questions?vivo 50,i will help you.No money,no gain.  
 Notice the MPL2.0 license!!  
-## Most Importantly,Accrording to the Close Source Sprite,everyone use any part of this repo should V me 50.QQ:2665241312
+## Most Importantly,Accrording to the Close Source Spirite,everyone use any part of this repo should V me 50.QQ:2665241312
