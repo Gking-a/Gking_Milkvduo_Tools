@@ -4,14 +4,15 @@
  * Mozilla Public License Version 2.0
  */
 #include "g_u_h.h"
-CameraInitInfo* camconf{};
-bool terminalFlag=false;
-ImageData getImageData(VIDEO_FRAME_INFO_S *frameInfo, int channel = 0){
+CameraInitInfo *camconf{};
+bool terminalFlag = false;
+ImageData getImageData(VIDEO_FRAME_INFO_S *frameInfo, int channel = 0)
+{
     ImageData idata{};
-    getImageData(frameInfo,&idata,channel);
+    getImageData(frameInfo, &idata, channel);
     return idata;
 }
-CVI_S32 getImageData(VIDEO_FRAME_INFO_S *frameInfo,ImageData* imgd,int channel)
+CVI_S32 getImageData(VIDEO_FRAME_INFO_S *frameInfo, ImageData *imgd, int channel)
 {
     CVI_S32 s32Ret = CVI_VPSS_GetChnFrame(0, channel, frameInfo, 2000);
     if (s32Ret != CVI_SUCCESS)
@@ -37,11 +38,17 @@ CVI_S32 getImageData(VIDEO_FRAME_INFO_S *frameInfo,ImageData* imgd,int channel)
         memcpy(&ptr[image_pix * i], (const CVI_VOID *)frameInfo->stVFrame.pu8VirAddr[i], frameInfo->stVFrame.u32Length[i]);
         CVI_SYS_Munmap(frameInfo->stVFrame.pu8VirAddr[i], frameInfo->stVFrame.u32Length[i]);
     }
-    imgd->data=ptr;
-    imgd->channel=2;
-    imgd->width=frameInfo->stVFrame.u32Width;
-    imgd->height=frameInfo->stVFrame.u32Height;
-    imgd->datasize=datasize;
+    if(GU_ROTATE180){
+        std::reverse(ptr, ptr + frameInfo->stVFrame.u32Length[0]);
+        struct UV { uint8_t v, u; };  // NV21 格式中 V 在前
+        UV* uv_elements = reinterpret_cast<UV*>(ptr + frameInfo->stVFrame.u32Length[0]);
+        std::reverse(uv_elements, uv_elements + (frameInfo->stVFrame.u32Length[1] / sizeof(UV)));
+    }
+    imgd->data = ptr;
+    imgd->channel = 2;
+    imgd->width = frameInfo->stVFrame.u32Width;
+    imgd->height = frameInfo->stVFrame.u32Height;
+    imgd->datasize = datasize;
     return CVI_SUCCESS;
 }
 int openCamara(SAMPLE_TDL_MW_CONFIG_S *stMWConfig)
@@ -54,7 +61,7 @@ int openCamara(SAMPLE_TDL_MW_CONFIG_S *stMWConfig)
     }
     return 0;
 }
-void setVPSS(SAMPLE_TDL_MW_CONFIG_S *stMWConfig, int count , uint u32w , uint u32h )
+void setVPSS(SAMPLE_TDL_MW_CONFIG_S *stMWConfig, int count, uint u32w, uint u32h)
 {
     // Setup VPSS Grp0
     stMWConfig->stVPSSPoolConfig.u32VpssGrpCount = 1;
@@ -82,7 +89,7 @@ void setVPSS(SAMPLE_TDL_MW_CONFIG_S *stMWConfig, int count , uint u32w , uint u3
     stMWConfig->stVencConfig.u32FrameWidth = u32w;
     stMWConfig->stVencConfig.u32FrameHeight = u32h;
 }
-void defaultConfig(SAMPLE_TDL_MW_CONFIG_S *stMWConfig, int count , uint u32w , uint u32h )
+void defaultConfig(SAMPLE_TDL_MW_CONFIG_S *stMWConfig, int count, uint u32w, uint u32h)
 {
     stMWConfig->stVBPoolConfig.u32VBPoolCount += count;
     for (int i = 0; i < count; i++)
@@ -108,9 +115,9 @@ SAMPLE_TDL_MW_CONTEXT *initContext(SAMPLE_TDL_MW_CONFIG_S *stMWConfig)
     }
     return stMWContext;
 }
-CameraInitInfo *autoStartCamera( int width , int height , int count )
+CameraInitInfo *autoStartCamera(int width, int height, int count)
 {
-    printf("user config w=%d,h=%d",width,height);
+    printf("user config w=%d,h=%d", width, height);
     SAMPLE_TDL_MW_CONFIG_S *stMWConfig = (SAMPLE_TDL_MW_CONFIG_S *)calloc(1, sizeof(SAMPLE_TDL_MW_CONFIG_S));
     openCamara(stMWConfig);
     defaultConfig(stMWConfig, count, width, height);
@@ -128,14 +135,14 @@ void terminalFlagfunc(int signo)
     signal(SIGINT, SIG_IGN);
     signal(SIGTERM, SIG_IGN);
     printf("handle signal flag, signo: %d\n", signo);
-    terminalFlag=true;
-    int led=25;
-    pinMode(led,PINMODE_OUTPUT);
-    wiringOpr(led,0);
+    terminalFlag = true;
+    int led = 25;
+    pinMode(led, PINMODE_OUTPUT);
+    wiringOpr(led, 0);
 }
 void terminalService(CVI_S32 signo)
 {
     printf("handle signal, signo: %d\n", signo);
-    terminalFlag=true;
+    terminalFlag = true;
     SAMPLE_TDL_Destroy_MW(camconf->pstMWContext);
 }

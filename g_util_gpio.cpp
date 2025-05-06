@@ -6,6 +6,7 @@
 #include "g_u_h.h"
 #include "wiringx.h"
 int hardcode_milkv_gp_pwm[]={2,10,3,11,4,5,5,6,6,9,7,8,8,7,9,4,12,4,13,5,26,3,27,4};
+int hardcode_milkv256_gp_pwm[]={2,7,3,6,4,5,5,6,6,9,7,8,8,7,9,4,10,10,11,11,12,4,13,5};
 int wiringSetup(){
     if(wiringXSetup("milkv_duo", NULL) == -1) {
         wiringXGC();
@@ -32,13 +33,19 @@ L298NController::L298NController(char ap,char a1,char a2,char bp,char b3,char b4
     port.chan[1][2]=b4;
 }
 void helpmethodtopwm(int gp){
-    for (char i = 0; i < 12; i++)
+    int *p=hardcode_milkv_gp_pwm;
+    int count=12;
+    if(GU_MILKV_DUO_256){
+        p=hardcode_milkv256_gp_pwm;
+    }
+    for (char i = 0; i < count; i++)
     {
-        if(gp==hardcode_milkv_gp_pwm[i*2]){
-            char pwm=hardcode_milkv_gp_pwm[i*2+1];
+        if(gp==p[i*2]){
+            char pwm=p[i*2+1];
             char cmd[100];
-            snprintf(cmd,100,"duo-pinmux -w GP%d/PWM_%d",gp,pwm);
+            snprintf(cmd,100,"duo-pinmux -w GP%d/PWM_%d\n",gp,pwm);
             system(cmd);
+            printf(cmd);
             return;
         }
     }
@@ -46,8 +53,9 @@ void helpmethodtopwm(int gp){
 void helpmethodtogp(int gp)
 {
     char cmd[100];
-    snprintf(cmd, 100, "duo-pinmux -w GP%d/GP%d", gp, gp);
+    snprintf(cmd, 100, "duo-pinmux -w GP%d/GP%d\n", gp, gp);
     system(cmd);
+    printf(cmd);
     return;
 }
 L298NController::L298NController(){}
@@ -78,6 +86,7 @@ void L298NController::setMode(){
 }
 L298NController::~L298NController(){}
 void L298NController::setspeed(int chan,int speed){
+    printf("set speed %d\n",speed);
     int pwm_pin=port.chan[chan][0];
     if(speed>1000||speed<-1000){
         standardPWM(pwm_pin,1000);

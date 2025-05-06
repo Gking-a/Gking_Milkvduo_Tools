@@ -4,12 +4,12 @@
  * Mozilla Public License Version 2.0
  */
 #pragma once
+#include "g_u_version.h"
 #ifndef __GKING_MIKLV_DUO_UTIL_INCLUDED
 #define __GKING_MIKLV_DUO_UTIL_INCLUDED
 #include <vector>
 #include <signal.h>
 #include <cvi_type.h>
-#include <stdio.h>
 #include <middleware_utils.h>
 #include "cvi_tdl.h"
 #include <cvi_comm.h>
@@ -81,13 +81,16 @@ extern "C"
     CVI_S32 getImageData(VIDEO_FRAME_INFO_S *frameInfo, ImageData *imageData, int channel = 0);
     
     
-    using namespace cv;
     typedef struct ImageDetectInfo{
         int referoffsety=0;
         int referoffsetx=0;
         bool detected=false;
     }ImageDetectInfo;
-    ImageDetectInfo *detectBinaryMiddle(Mat &img,void**);
+    ImageDetectInfo *detectBinaryMiddle(cv::Mat &img,void**);
+    struct binaryDetectStruct{
+        int starty,endy;
+        int stride;
+    };
     struct detectFollowStruct{
         cv::Scalar lower;
         cv::Scalar upper;

@@ -5,9 +5,9 @@
  */
 #include "g_u_h.h"
 
-ImageDetector::ImageDetector(){};
-ImageDetector::~ImageDetector(){};
-ImageDetectInfo* detectBinaryMiddle(Mat &img,void**) {
+ImageDetectInfo* detectBinaryMiddle(cv::Mat &img,void**a ){
+    using namespace cv;
+    binaryDetectStruct *arg=(binaryDetectStruct*)*a;
     Mat binary;
     threshold(img, binary, 55, 255, THRESH_BINARY);
 
@@ -26,10 +26,11 @@ ImageDetectInfo* detectBinaryMiddle(Mat &img,void**) {
     // 生成扫描行（同原逻辑）
     const int center_y = height / 2;
     std::vector<int> scan_rows{center_y};
-    for (int i = 1; i <= 15; ++i) {
-        scan_rows.push_back(center_y - i);
-        // scan_rows.push_back(center_y + 2*i);
+    for (int i = arg->starty; i < arg->endy; i+=arg->stride)
+    {
+        scan_rows.push_back(i);
     }
+    
 
     // 逐行处理
     for (const int y : scan_rows) {
